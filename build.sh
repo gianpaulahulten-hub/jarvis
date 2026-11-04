@@ -5,6 +5,8 @@ cd "$(dirname "$0")"
 if [ -z "${JARVIS_APP_PASSWORD:-}" ]; then echo "ERROR: JARVIS_APP_PASSWORD is not set. Refusing to build." >&2; exit 1; fi
 rm -rf dist && mkdir -p dist
 cp -r src/icons src/manifest.webmanifest dist/
+# Public, unencrypted OAuth redirect page (holds no personal data)
+cp src/oura-callback.html dist/
 npx -y staticrypt@3 src/index.html -d dist -p "$JARVIS_APP_PASSWORD" --short --remember 30 \
   --template-title "JARVIS" --template-instructions "Enter your passphrase" \
   --template-button "Unlock" --template-color-primary "#4fd1ff" --template-color-secondary "#0a0d14" \
