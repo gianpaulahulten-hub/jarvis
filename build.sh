@@ -24,7 +24,7 @@ rm -f "$TMP/index.html"
 BUILD_ID="$BUILD_ID" python3 - <<'PY'
 import os
 bid=os.environ["BUILD_ID"]
-css='<meta name="theme-color" content="#0a0d14"><meta name="color-scheme" content="dark"><meta name="jarvis-build" content="%s"><style>html,body{background:#0a0d14!important;color:#e7ecf5}.staticrypt-form{background:#121826!important;border:1px solid #1e2738;border-radius:20px}.staticrypt-instructions,.staticrypt-title,label{color:#e7ecf5!important}input[type=password],input[type=text]{background:#0a0d14!important;color:#e7ecf5!important;border:1px solid #1e2738!important;border-radius:12px}</style>'%bid
+css='<meta name="theme-color" content="#0a0d14"><meta name="color-scheme" content="dark"><meta name="jarvis-build" content="%s"><style>html,body{background:#0a0d14!important;color:#e7ecf5}.staticrypt-form{background:#121826!important;border:1px solid #1e2738;border-radius:20px}.staticrypt-instructions,.staticrypt-title,label{color:#e7ecf5!important}.staticrypt-password-container{background:transparent!important}input[type=password],input[type=text]{background:#0a0d14!important;color:#e7ecf5!important;border:1px solid #1e2738!important;border-radius:12px}</style>'%bid
 def patch(p,head_extra="",body_extra="",repl=()):
     s=open(p).read()
     s=s.replace("<head>","<head>"+css+head_extra,1).replace("<html","<html style=\"background:#0a0d14\"",1)
