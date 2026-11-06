@@ -1,0 +1,162 @@
+<!doctype html><html lang="en" style="background:#0a0d14"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d14"><meta name="color-scheme" content="dark">
+<title>JARVIS · Training</title>
+<style>html,body{background:#0a0d14;color:#e7ecf5;margin:0}</style>
+<style>
+:root{--bg:#0a0d14;--card:#121826;--card2:#0f1420;--line:#1e2738;--mut:#8a96ad;--acc:#4fd1ff;--acc2:#8b7bff;--rd:#5eead4;--sl:#8b7bff;--ac:#fbbf24;--hr:#fb7185;--deep:#4f46e5;--light:#60a5fa;--rem:#22d3ee;--awake:#f472b6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;padding:14px 14px 28px;-webkit-font-smoothing:antialiased}
+body.embedded{padding:12px 12px 20px}
+.top{display:flex;justify-content:space-between;align-items:center;margin:0 2px 12px;gap:10px}
+.top .src{color:var(--mut);font-size:12px}.top .src b{color:#e7ecf5;font-weight:600}
+.eye{background:var(--card);border:1px solid var(--line);color:#e7ecf5;width:36px;height:36px;border-radius:11px;display:grid;place-items:center}
+body.embedded .eye{display:none}
+.card{background:linear-gradient(180deg,#141b2b,#111725);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+.card h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0 0 12px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.card h2 small{letter-spacing:0;text-transform:none;font-weight:500;color:#5f6b84}
+.rings{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.ring{position:relative;width:96px;height:96px;margin:0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .v{position:absolute;inset:0;display:grid;place-items:center;font-size:28px;font-weight:700}
+.rl{font-size:12px;color:var(--mut);margin-top:6px}.rs{font-size:11px;color:#5f6b84}
+.big{font-size:34px;font-weight:700;letter-spacing:-.02em}.big small{font-size:15px;color:var(--mut);font-weight:500;margin-left:4px}
+.sub{color:var(--mut);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.grid.two{grid-template-columns:repeat(2,1fr)}
+.stat{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px}
+.stat .k{font-size:11px;color:var(--mut)}.stat .n{font-size:18px;font-weight:650;margin-top:2px}.stat .n small{font-size:11px;color:var(--mut);font-weight:500;margin-left:2px}
+.bars{display:grid;gap:9px}
+.bar{display:grid;grid-template-columns:118px 1fr 28px;gap:8px;align-items:center;font-size:12.5px}
+.bar span:first-child{color:#c7cfdd}.bar .t{height:6px;border-radius:4px;background:#1b2334;overflow:hidden}.bar .t i{display:block;height:100%;border-radius:4px}
+.bar .n{text-align:right;color:var(--mut);font-variant-numeric:tabular-nums}
+.stages{display:flex;height:12px;border-radius:7px;overflow:hidden;margin:14px 0 8px;gap:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mut)}.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.legend b{color:#e7ecf5;font-weight:600;margin-left:3px}
+.hyp{margin-top:12px}
+.seg{display:inline-flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:2px}
+.seg button{background:none;border:0;color:var(--mut);font-size:12px;padding:5px 10px;border-radius:8px;font-weight:600}.seg button.on{background:#1d2742;color:#fff}
+.trend{margin-top:14px}.trend:first-of-type{margin-top:4px}
+.trend .hd{display:flex;justify-content:space-between;align-items:baseline;font-size:13px}.trend .hd b{font-weight:600}.trend .hd span{color:var(--mut);font-size:12px}
+.trend svg{display:block;width:100%;height:74px;margin-top:4px}
+.wsum{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;color:#c7cfdd}.chip b{color:#fff;margin-left:3px}
+.w{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.w:first-of-type{border-top:0}
+.w .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:#18213a}
+.w .nm{font-weight:600}.w .when{font-size:12px;color:var(--mut)}.w .m{text-align:right;font-size:12.5px;color:#c7cfdd}.w .m div+div{color:var(--mut);font-size:11.5px}
+.nodata{color:#5f6b84;font-size:13px;padding:6px 0}
+.src-list{display:grid;gap:6px;font-size:12.5px}.src-list div{display:flex;justify-content:space-between}.src-list span:last-child{color:var(--mut)}
+.ok{color:#5eead4!important}.na{color:#5f6b84!important}
+.foot{color:#5f6b84;font-size:11.5px;text-align:center;margin-top:6px}
+.more{width:100%;background:var(--card2);border:1px solid var(--line);color:#c7cfdd;border-radius:12px;padding:9px;margin-top:8px;font-size:13px}
+.p{transition:filter .25s}
+body.hide .p{filter:blur(9px);user-select:none}
+.empty{text-align:center;padding:48px 20px;color:var(--mut)}.empty b{display:block;color:#e7ecf5;font-size:18px;margin-bottom:6px}
+</style></head><body>
+<div class="top"><div class="src" id="meta"></div><button class="eye" id="eye" aria-label="Hide numbers"></button></div>
+<div id="app"></div>
+<script>
+const D=/*__OURA_DATA__*/null;
+const TZ="America/New_York",embedded=window.parent!==window;
+if(embedded)document.body.classList.add("embedded");
+const $=s=>document.querySelector(s),last=a=>a&&a.length?a[a.length-1]:null,esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const num=v=>v!=null&&!isNaN(v);
+const P=(v,u)=>num(v)||typeof v==="string"?`<span class="p">${v}</span>${u?`<small>${u}</small>`:""}`:`<span class="na">—</span>`;
+const dur=s=>{if(!num(s))return null;const m=Math.round(s/60);return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`};
+const tm=iso=>new Date(iso).toLocaleTimeString("en-US",{timeZone:TZ,hour:"numeric",minute:"2-digit"});
+const dayFmt=(d,o={weekday:"short",month:"short",day:"numeric"})=>new Date(d+"T12:00:00Z").toLocaleDateString("en-US",{...o,timeZone:"UTC"});
+const dtFmt=iso=>new Date(iso).toLocaleDateString("en-US",{timeZone:TZ,weekday:"short",month:"short",day:"numeric"});
+const nice=k=>({hrv_balance:"HRV balance",rem_sleep:"REM sleep",meet_daily_targets:"Daily targets",move_every_hour:"Move every hour",previous_night:"Previous night",previous_day_activity:"Previous day"}[k]||k.replace(/_/g," ").replace(/^./,c=>c.toUpperCase()));
+const scoreColor=v=>v>=85?"#5eead4":v>=70?"#4fd1ff":v>=60?"#fbbf24":"#fb7185";
+const WICON={walking:"🚶‍♀️",running:"🏃‍♀️",pilates:"🧘‍♀️",yoga:"🧘‍♀️",strengthTraining:"🏋️‍♀️",cycling:"🚴‍♀️",swimming:"🏊‍♀️",houseWork:"🧹",hiking:"🥾",dancing:"💃",elliptical:"⚡",rowing:"🚣‍♀️",tennis:"🎾",hiit:"🔥"};
+const wname=a=>({strengthTraining:"Strength training",houseWork:"Housework",hiit:"HIIT"}[a]||a.replace(/([A-Z])/g," $1").replace(/^./,c=>c.toUpperCase()));
+const SRC={manual:"Logged",autodetected:"Auto-detected",confirmed:"Confirmed",workout_heart_rate:"Heart-rate workout"};
+const EYE_ON='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',EYE_OFF='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.9 17.9A10 10 0 0 1 12 19C5 19 1 12 1 12a18 18 0 0 1 5-5.9M9.9 4.2A9 9 0 0 1 12 4c7 0 11 7 11 7a18 18 0 0 1-2.2 3.2M1 1l22 22"/></svg>';
+
+/* Privacy: same-origin JARVIS setting + live messages from the JARVIS eye button */
+function setHide(v,save){document.body.classList.toggle("hide",!!v);$("#eye").innerHTML=v?EYE_OFF:EYE_ON;if(save)try{localStorage.setItem("jarvis.hide",v?"1":"0")}catch(e){}}
+try{setHide(localStorage.getItem("jarvis.hide")==="1")}catch(e){setHide(false)}
+$("#eye").onclick=()=>setHide(!document.body.classList.contains("hide"),true);
+addEventListener("message",e=>{if(e.origin!==location.origin||e.source!==window.parent)return;const m=e.data||{};if(m.type==="jarvis:privacy")setHide(m.hidden)});
+
+function ring(v,color,label,sub){const r=40,c=2*Math.PI*r,f=num(v)?Math.max(0,Math.min(100,v))/100:0;
+ return `<div><div class="ring"><svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="${r}" fill="none" stroke="#1b2334" stroke-width="8"/>${num(v)?`<circle class="p" cx="48" cy="48" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c*f} ${c}"/>`:""}</svg><div class="v">${num(v)?`<span class="p">${v}</span>`:'<span class="na" style="font-size:13px">No data</span>'}</div></div><div class="rl">${label}</div><div class="rs">${sub||""}</div></div>`}
+function contrib(obj,color){if(!obj)return '<div class="nodata">No data</div>';return `<div class="bars">${Object.entries(obj).map(([k,v])=>`<div class="bar"><span>${nice(k)}</span><div class="t">${num(v)?`<i class="p" style="width:${v}%;background:${scoreColor(v)}"></i>`:""}</div><span class="n">${num(v)?P(v):"—"}</span></div>`).join("")}</div>`}
+const stat=(k,v,u)=>`<div class="stat"><div class="k">${k}</div><div class="n">${v==null?'<span class="na">No data</span>':P(v,u)}</div></div>`;
+
+function chart(pts,color,{bars=false,fmt=v=>v,unit=""}={}){
+ const vals=pts.filter(p=>num(p.v));if(!vals.length)return '<div class="nodata">No data</div>';
+ const W=340,H=74,pad=6,n=pts.length,vs=vals.map(p=>p.v);let lo=Math.min(...vs),hi=Math.max(...vs);if(bars)lo=0;if(hi===lo){hi+=1;lo-=bars?0:1}
+ const x=i=>n===1?W/2:pad+(W-2*pad)*i/(n-1),y=v=>H-pad-(H-2*pad-10)*(v-lo)/(hi-lo),avg=vs.reduce((a,b)=>a+b,0)/vs.length,id="g"+Math.random().toString(36).slice(2);
+ let body="";
+ if(bars){const bw=Math.max(2,(W-2*pad)/n*0.62);body=pts.map((p,i)=>num(p.v)?`<rect x="${x(i)-bw/2}" y="${y(p.v)}" width="${bw}" height="${H-pad-y(p.v)}" rx="${Math.min(3,bw/2)}" fill="${color}" opacity="${i===n-1?1:.55}"/>`:"").join("")}
+ else{let d="",started=false;pts.forEach((p,i)=>{if(!num(p.v)){started=false;return}d+=(started?"L":"M")+x(i).toFixed(1)+" "+y(p.v).toFixed(1);started=true});
+  const f=pts.map((p,i)=>[p,i]).filter(([p])=>num(p.v)),area=`M${x(f[0][1])} ${H-pad} `+f.map(([p,i])=>`L${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ")+` L${x(f[f.length-1][1])} ${H-pad}Z`,lp=f[f.length-1];
+  body=`<defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".35"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${area}" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(lp[1])}" cy="${y(lp[0].v)}" r="3.6" fill="${color}" stroke="#0a0d14" stroke-width="2"/>`}
+ return `<svg class="p" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="${pad}" x2="${W-pad}" y1="${y(avg)}" y2="${y(avg)}" stroke="#3a4560" stroke-dasharray="3 4" stroke-width="1"/>${body}</svg>`}
+function trend(title,series,color,opts={}){const vs=series.filter(p=>num(p.v)).map(p=>p.v),f=opts.fmt||(v=>Math.round(v));
+ const avg=vs.length?f(vs.reduce((a,b)=>a+b,0)/vs.length):null,lv=vs.length?f(vs[vs.length-1]):null;
+ return `<div class="trend"><div class="hd"><b>${title}</b><span>${vs.length?`latest ${P(lv)}${opts.unit||""} · avg ${P(avg)}${opts.unit||""}`:""}</span></div>${chart(series,color,opts)}</div>`}
+
+function days(n){const out=[],end=new Date((D.range&&D.range[1]||new Date().toISOString().slice(0,10))+"T12:00:00Z");for(let i=n-1;i>=0;i--){out.push(new Date(end-i*864e5).toISOString().slice(0,10))}return out}
+const series=(arr,fn,n)=>{const m=new Map((arr||[]).map(o=>[o.day,o]));return days(n).map(d=>({day:d,v:m.has(d)?fn(m.get(d)):null}))};
+let RANGE=+(localStorage.getItem("training.range")||7),WSHOW=8;
+
+function render(){
+ if(!D){$("#meta").innerHTML="<b>Oura</b> · not connected yet";$("#app").innerHTML='<div class="card empty"><b>Not connected yet</b>Connect Oura and your training data will appear here.</div>';return post()}
+ const upd=D.updated?new Date(D.updated*1000).toLocaleString("en-US",{timeZone:TZ,month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" ET":"unknown";
+ $("#meta").innerHTML=`<b>Oura</b> · updated ${upd}`;
+ const R=last(D.readiness),S=last(D.sleepScore),A=last(D.activity),N=last(D.sleep),O=D.spo2&&D.spo2.find(x=>N&&x.day===N.day)||last(D.spo2),ST=last(D.stress);
+ let h="";
+ h+=`<div class="card"><h2>Latest scores <small>${R?dayFmt(R.day):""}</small></h2><div class="rings">${ring(R&&R.score,"#5eead4","Readiness",R?dayFmt(R.day,{month:"short",day:"numeric"}):"")}${ring(S&&S.score,"#8b7bff","Sleep",S?dayFmt(S.day,{month:"short",day:"numeric"}):"")}${ring(A&&A.score,"#fbbf24","Activity",A?dayFmt(A.day,{month:"short",day:"numeric"}):"")}</div></div>`;
+ // Last night
+ if(N){const st=[["Deep",N.deep_sleep_duration,"var(--deep)"],["Light",N.light_sleep_duration,"var(--light)"],["REM",N.rem_sleep_duration,"var(--rem)"],["Awake",N.awake_time,"var(--awake)"]],tot=st.reduce((a,s)=>a+(s[1]||0),0);
+  let hyp="";if(N.phases){const L={"1":3,"2":2,"3":1,"4":0},C={"1":"#4f46e5","2":"#60a5fa","3":"#22d3ee","4":"#f472b6"},n=N.phases.length,w=340/n;hyp=`<svg class="hyp p" viewBox="0 0 340 64" preserveAspectRatio="none" style="width:100%;height:64px">${[...N.phases].map((c,i)=>L[c]==null?"":`<rect x="${(i*w).toFixed(2)}" y="${L[c]*16}" width="${(w+.4).toFixed(2)}" height="14" fill="${C[c]}"/>`).join("")}</svg><div class="legend" style="justify-content:space-between"><span class="p">${tm(N.bedtime_start)}</span><span class="p">${tm(N.bedtime_end)}</span></div>`}
+  h+=`<div class="card"><h2>Last night <small>${dayFmt(N.day)}</small></h2><div class="big">${P(dur(N.total_sleep_duration))}<small>asleep</small></div><div class="sub"><span class="p">${tm(N.bedtime_start)} → ${tm(N.bedtime_end)}</span> · ${P(dur(N.time_in_bed))} in bed</div>
+  ${tot?`<div class="stages p">${st.map(s=>s[1]?`<i style="flex:${s[1]};background:${s[2]}"></i>`:"").join("")}</div><div class="legend">${st.map(s=>`<span><i style="background:${s[2]}"></i>${s[0]}<b class="p">${dur(s[1])||"—"}</b></span>`).join("")}</div>`:""}${hyp}
+  <div class="grid">${stat("Efficiency",N.efficiency,"%")}${stat("Lowest HR",N.lowest_heart_rate,"bpm")}${stat("Avg HRV",N.average_hrv,"ms")}${stat("Avg HR",num(N.average_heart_rate)?Math.round(N.average_heart_rate):null,"bpm")}${stat("Fell asleep in",dur(N.latency))}${stat("Breathing",num(N.average_breath)?N.average_breath.toFixed(1):null,"/min")}${stat("SpO₂ avg",O&&num(O.avg)?O.avg.toFixed(1):null,"%")}${stat("Breathing dist.",O?O.bdi:null)}${stat("Temp. dev.",R&&num(R.temperature_deviation)?(R.temperature_deviation>0?"+":"")+R.temperature_deviation.toFixed(2):null,"°C")}</div></div>`}
+ else h+=`<div class="card"><h2>Last night</h2><div class="nodata">No data</div></div>`;
+ h+=`<div class="card"><h2>Readiness contributors <small>${R?dayFmt(R.day):""}</small></h2>${contrib(R&&R.contributors)}</div>`;
+ h+=`<div class="card"><h2>Sleep contributors <small>${S?dayFmt(S.day):""}</small></h2>${contrib(S&&S.contributors)}</div>`;
+ // Activity
+ if(A){const act=(A.high_activity_time||0)+(A.medium_activity_time||0);
+  h+=`<div class="card"><h2>Activity <small>${dayFmt(A.day)}</small></h2><div class="big">${P(num(A.steps)?A.steps.toLocaleString():null)}<small>steps</small></div>
+  <div class="grid">${stat("Active cal",A.active_calories,num(A.target_calories)?"/ "+A.target_calories:"kcal")}${stat("Total cal",num(A.total_calories)?A.total_calories.toLocaleString():null,"kcal")}${stat("Active time",dur(act))}${stat("Walking equiv.",num(A.equivalent_walking_distance)?(A.equivalent_walking_distance/1609.34).toFixed(1):null,"mi")}${stat("Low activity",dur(A.low_activity_time))}${stat("Sedentary",dur(A.sedentary_time))}</div>
+  <div style="margin-top:14px">${contrib(A.contributors)}</div></div>`}
+ else h+=`<div class="card"><h2>Activity</h2><div class="nodata">No data</div></div>`;
+ // Stress
+ if(ST)h+=`<div class="card"><h2>Stress &amp; recovery <small>${dayFmt(ST.day)}</small></h2><div class="grid">${stat("Day",ST.day_summary?ST.day_summary.replace(/_/g," "):null)}${stat("High stress",dur(ST.stress_high))}${stat("Recovery",dur(ST.recovery_high))}</div></div>`;
+ // Trends
+ const n=RANGE;
+ h+=`<div class="card"><h2>Trends <span class="seg"><button data-r="7" class="${n===7?"on":""}">7D</button><button data-r="30" class="${n===30?"on":""}">30D</button></span></h2>
+ ${trend("Readiness",series(D.readiness,o=>o.score,n),"#5eead4")}${trend("Sleep score",series(D.sleepScore,o=>o.score,n),"#8b7bff")}
+ ${trend("Sleep duration",series(D.sleep,o=>o.total_sleep_duration!=null?o.total_sleep_duration/3600:null,n),"#60a5fa",{bars:true,fmt:v=>v.toFixed(1),unit:"h"})}
+ ${trend("HRV",series(D.sleep,o=>o.average_hrv,n),"#22d3ee",{unit:" ms"})}${trend("Lowest heart rate",series(D.sleep,o=>o.lowest_heart_rate,n),"#fb7185",{unit:" bpm"})}
+ ${trend("Steps",series(D.activity,o=>o.steps,n),"#fbbf24",{bars:true,fmt:v=>Math.round(v).toLocaleString()})}${trend("Activity score",series(D.activity,o=>o.score,n),"#f59e0b")}</div>`;
+ // Heart rate 48h
+ if(D.hr&&D.hr.length){const pts=D.hr.map(([t,v])=>({day:t,v})),vs=pts.map(p=>p.v);
+  h+=`<div class="card"><h2>Heart rate <small>last 48 h · 15-min avg</small></h2><div class="trend"><div class="hd"><b>${P(Math.min(...vs))}–${P(Math.max(...vs))} bpm</b><span>${dtFmt(D.hr[0][0])} → ${dtFmt(last(D.hr)[0])}</span></div>${chart(pts,"#fb7185")}</div></div>`}
+ // Workouts
+ const W=D.workouts||[];
+ if(W.length){const cut=Date.now()-30*864e5,recent=W.filter(w=>new Date(w.start_datetime)>=cut),agg={};recent.forEach(w=>{const a=agg[w.activity]||(agg[w.activity]={n:0,m:0});a.n++;a.m+=(new Date(w.end_datetime)-new Date(w.start_datetime))/6e4});
+  h+=`<div class="card"><h2>Workouts <small>last 30 days</small></h2><div class="wsum">${Object.entries(agg).sort((a,b)=>b[1].m-a[1].m).map(([k,a])=>`<span class="chip">${WICON[k]||"🏅"} ${wname(k)}<b class="p">${a.n}× · ${dur(a.m*60)}</b></span>`).join("")}</div>
+  ${W.slice(0,WSHOW).map(w=>{const m=(new Date(w.end_datetime)-new Date(w.start_datetime))/1000;return `<div class="w"><div class="ic">${WICON[w.activity]||"🏅"}</div><div><div class="nm">${esc(w.label||wname(w.activity))}</div><div class="when">${dtFmt(w.start_datetime)} · ${tm(w.start_datetime)} · ${SRC[w.source]||esc(w.source||"")}${w.intensity?" · "+esc(w.intensity):""}</div></div><div class="m"><div class="p">${dur(m)}</div><div class="p">${num(w.calories)?Math.round(w.calories)+" kcal":""}${num(w.distance)&&w.distance>0?" · "+(w.distance/1609.34).toFixed(2)+" mi":""}</div></div></div>`}).join("")}
+  ${W.length>WSHOW?`<button class="more" id="more">Show more (${W.length-WSHOW} older)</button>`:""}</div>`}
+ else h+=`<div class="card"><h2>Workouts</h2><div class="nodata">No data</div></div>`;
+ // Sources
+ const NM=[["daily_readiness","Readiness"],["daily_sleep","Sleep score"],["sleep","Sleep sessions"],["daily_activity","Activity"],["workout","Workouts"],["heartrate","Heart rate"],["daily_spo2","Blood oxygen"],["daily_stress","Stress"],["session","Guided sessions"],["daily_resilience","Resilience"],["daily_cardiovascular_age","Cardiovascular age"],["vO2_max","VO₂ max"]];
+ h+=`<div class="card"><h2>Oura data sources</h2><div class="src-list">${NM.map(([k,l])=>{const s=D.endpoints[k],c=D.counts[k];return `<div><span>${l}</span><span class="${s===200&&c?"ok":"na"}">${s===200?(c?"Live":"No data"):s==null?"Not connected yet":"Not available ("+s+")"}</span></div>`}).join("")}</div></div>`;
+ h+=`<div class="foot">Live from your Oura ring · refreshes with JARVIS</div>`;
+ $("#app").innerHTML=h;
+ document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{RANGE=+b.dataset.r;try{localStorage.setItem("training.range",RANGE)}catch(e){}render()});
+ const mb=$("#more");if(mb)mb.onclick=()=>{WSHOW+=12;render()};
+ post();
+}
+/* Tell JARVIS our height (so its page scrolls, not the iframe) and forward pull-to-refresh touches */
+function post(){if(embedded)parent.postMessage({type:"jarvis:height",h:document.documentElement.scrollHeight},location.origin)}
+if(embedded){new ResizeObserver(post).observe(document.body);
+ ["touchstart","touchmove","touchend"].forEach(t=>addEventListener(t,e=>{const p=e.touches[0]||e.changedTouches[0];parent.postMessage({type:"jarvis:touch",phase:t,y:p?p.screenY:0},location.origin)},{passive:true}));
+ parent.postMessage({type:"jarvis:hello"},location.origin)}
+render();
+</script></body></html>

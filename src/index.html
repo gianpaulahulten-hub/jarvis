@@ -21,6 +21,7 @@ main{padding:16px 16px calc(env(safe-area-inset-bottom) + 96px)}
 h1{font-size:26px;margin:4px 0 2px}.hint{color:var(--mut);margin:0 0 16px}
 .slot{background:var(--card);border:1px solid var(--line);border-radius:20px;min-height:58vh;overflow:hidden;position:relative}
 .slot iframe{border:0;width:100%;height:70vh;display:block;background:var(--bg)}
+.slot:has(iframe){min-height:0}
 .empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;gap:10px}
 .orb{width:64px;height:64px;margin:0 auto;border-radius:50%;border:2px dashed #2a3650;display:grid;place-items:center;font-size:26px}
 .empty b{font-size:17px}.empty span{color:var(--mut);font-size:13px;max-width:260px}
@@ -36,25 +37,35 @@ body.hide .private{filter:blur(14px);pointer-events:none;user-select:none}
 <nav id="nav"></nav>
 <script>
 /* Mini-app registry: set url to each mini app's published page once it exists. Never put data here. */
-const APPS=[["budget","Budget","💳",""],["investments","Investments","📈",""],["macros","Macros","🥗",""],["training","Training","🏋️",""],["pets","Pets","🐾",""],["dining","Dining","🍽️",""],["travel","Travel","✈️",""],["newsletter","Daily","📰",""]].map(([id,name,icon,url])=>({id,name,icon,url}));
+const APPS=[["budget","Budget","💳",""],["investments","Investments","📈",""],["macros","Macros","🥗",""],["training","Training","🏋️","training/"],["pets","Pets","🐾",""],["dining","Dining","🍽️",""],["travel","Travel","✈️",""],["newsletter","Daily","📰",""]].map(([id,name,icon,url])=>({id,name,icon,url}));
 const $=s=>document.querySelector(s),nav=$("#nav"),slot=$("#slot");
+/* Mini apps that blur their own numbers on the jarvis:privacy message (so the tab stays usable with the eye on). Others get the whole slot blurred. */
+const PRIVACY_AWARE=new Set(["training"]);
 const EYE_ON='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',EYE_OFF='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.9 17.9A10 10 0 0 1 12 19C5 19 1 12 1 12a18 18 0 0 1 5-5.9M9.9 4.2A9 9 0 0 1 12 4c7 0 11 7 11 7a18 18 0 0 1-2.2 3.2M1 1l22 22"/></svg>';
 function setHide(v){document.body.classList.toggle("hide",v);localStorage.setItem("jarvis.hide",v?"1":"0");$("#eye").innerHTML=v?EYE_OFF:EYE_ON;broadcast({type:"jarvis:privacy",hidden:v})}
 $("#eye").onclick=()=>setHide(!document.body.classList.contains("hide"));
 /* Embed handshake: a mini app (its own StatiCrypt page) posts {type:"jarvis:hello"}; we reply with the shared key so it unlocks inside JARVIS only. See README. */
 function broadcast(m){const f=slot.querySelector("iframe");if(f)try{f.contentWindow.postMessage(m,new URL(f.src).origin)}catch(e){}}
 addEventListener("message",e=>{const f=slot.querySelector("iframe");if(!f||e.source!==f.contentWindow||e.origin!==new URL(f.src).origin)return;
- if(e.data&&e.data.type==="jarvis:hello"){const k=localStorage.getItem("staticrypt_passphrase");if(k)e.source.postMessage({type:"jarvis:key",key:k},e.origin);broadcast({type:"jarvis:privacy",hidden:document.body.classList.contains("hide")})}});
+ const d=e.data||{};
+ if(d.type==="jarvis:height"&&d.h>0){f.style.height=Math.ceil(d.h)+"px";return}
+ if(d.type==="jarvis:touch"){touch(d.phase,d.y);return}
+ if(d.type==="jarvis:hello"){let k=null;try{k=localStorage.getItem("staticrypt_passphrase")||sessionStorage.getItem("jarvis_key")}catch(_){}if(k)e.source.postMessage({type:"jarvis:key",key:k},e.origin);broadcast({type:"jarvis:privacy",hidden:document.body.classList.contains("hide")})}});
 function show(id){const a=APPS.find(x=>x.id===id)||APPS[0];localStorage.setItem("jarvis.tab",a.id);
  [...nav.children].forEach(b=>b.classList.toggle("on",b.dataset.id===a.id));$("#t").textContent=a.name;
  $("#h").textContent=a.url?"Live from your "+a.name+" app":"Your "+a.name.toLowerCase()+" app will appear here.";
+ slot.classList.toggle("private",!(a.url&&PRIVACY_AWARE.has(a.id)));
  slot.innerHTML=a.url?`<iframe src="${a.url}" title="${a.name}" loading="lazy" allow="clipboard-write"></iframe>`:`<div class="empty"><div class="orb">${a.icon}</div><b>Not connected yet</b><span>Once the ${a.name} mini app is published, it will show here live.</span></div>`}
 APPS.forEach(a=>{const b=document.createElement("button");b.dataset.id=a.id;b.innerHTML=`<i>${a.icon}</i>${a.name}`;b.onclick=()=>show(a.id);nav.appendChild(b)});
 const hr=new Date().getHours();$("#greet").textContent=(hr<12?"Good morning":hr<18?"Good afternoon":"Good evening")+", GianPaula";
 setHide(localStorage.getItem("jarvis.hide")==="1");show(localStorage.getItem("jarvis.tab"));
 /* Pull to refresh */
 let y0=null,dy=0;const p=$("#ptr");
-addEventListener("touchstart",e=>{y0=scrollY<=0?e.touches[0].clientY:null},{passive:true});
-addEventListener("touchmove",e=>{if(y0==null)return;dy=Math.max(0,e.touches[0].clientY-y0);p.style.transition="none";p.style.height=Math.min(dy/2.2,70)+"px"},{passive:true});
-addEventListener("touchend",()=>{p.style.transition="";if(dy>140){p.classList.add("go");p.style.height="56px";setTimeout(()=>location.reload(),350)}else p.style.height="0";y0=null;dy=0});
+/* touch(phase,y) is shared with embedded mini apps, which forward their touches (screen coords) */
+function touch(ph,y){if(ph==="touchstart"){y0=scrollY<=0?y:null;dy=0}
+ else if(ph==="touchmove"){if(y0==null)return;dy=Math.max(0,y-y0);p.style.transition="none";p.style.height=Math.min(dy/2.2,70)+"px"}
+ else{p.style.transition="";if(dy>140){p.classList.add("go");p.style.height="56px";setTimeout(()=>location.reload(),350)}else p.style.height="0";y0=null;dy=0}}
+addEventListener("touchstart",e=>touch("touchstart",e.touches[0].screenY),{passive:true});
+addEventListener("touchmove",e=>touch("touchmove",e.touches[0].screenY),{passive:true});
+addEventListener("touchend",()=>touch("touchend",0));
 </script></body></html>
