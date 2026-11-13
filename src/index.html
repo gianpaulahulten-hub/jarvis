@@ -37,10 +37,10 @@ body.hide .private{filter:blur(14px);pointer-events:none;user-select:none}
 <nav id="nav"></nav>
 <script>
 /* Mini-app registry: set url to each mini app's published page once it exists. Never put data here. */
-const APPS=[["budget","Budget","💳",""],["investments","Investments","📈",""],["macros","Macros","🥗",""],["training","Training","🏋️","training/"],["pets","Pets","🐾",""],["dining","Dining","🍽️",""],["travel","Travel","✈️",""],["newsletter","Daily","📰",""]].map(([id,name,icon,url])=>({id,name,icon,url}));
+const APPS=[["budget","Budget","💳",""],["investments","Investments","📈",""],["macros","Macros","🥗",""],["training","Training","🏋️","training/"],["pets","Pets","🐾",""],["dining","Dining","🍽️","dining/"],["travel","Travel","✈️","travel/"],["newsletter","Daily","📰",""]].map(([id,name,icon,url])=>({id,name,icon,url}));
 const $=s=>document.querySelector(s),nav=$("#nav"),slot=$("#slot");
 /* Mini apps that blur their own numbers on the jarvis:privacy message (so the tab stays usable with the eye on). Others get the whole slot blurred. */
-const PRIVACY_AWARE=new Set(["training"]);
+const PRIVACY_AWARE=new Set(["training","dining","travel"]);
 const EYE_ON='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',EYE_OFF='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.9 17.9A10 10 0 0 1 12 19C5 19 1 12 1 12a18 18 0 0 1 5-5.9M9.9 4.2A9 9 0 0 1 12 4c7 0 11 7 11 7a18 18 0 0 1-2.2 3.2M1 1l22 22"/></svg>';
 function setHide(v){document.body.classList.toggle("hide",v);localStorage.setItem("jarvis.hide",v?"1":"0");$("#eye").innerHTML=v?EYE_OFF:EYE_ON;broadcast({type:"jarvis:privacy",hidden:v})}
 $("#eye").onclick=()=>setHide(!document.body.classList.contains("hide"));

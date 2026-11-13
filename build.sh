@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Builds the locked site into ./dist: JARVIS (index.html) + Training mini app (training/index.html).
+# Builds the locked site into ./dist: JARVIS (index.html) + mini apps (training/, dining/, travel/), all StatiCrypt-locked.
 # Never publishes unencrypted HTML (except the data-free OAuth callback page).
 set -euo pipefail
 cd "$(dirname "$0")"
 if [ -z "${JARVIS_APP_PASSWORD:-}" ]; then echo "ERROR: JARVIS_APP_PASSWORD is not set. Refusing to build." >&2; exit 1; fi
 BUILD_ID="$(date -u +%Y%m%dT%H%M%SZ)"
 TMP="$(mktemp -d)"; chmod 700 "$TMP"; trap 'rm -rf "$TMP"' EXIT
-rm -rf dist && mkdir -p dist/training
+rm -rf dist && mkdir -p dist/training dist/dining dist/travel
 cp -r src/icons src/manifest.webmanifest dist/
 # Public, unencrypted OAuth redirect page (holds no personal data)
 cp src/oura-callback.html dist/
@@ -20,6 +20,14 @@ SC=(npx -y staticrypt@3 --short --remember 30 --config .staticrypt.json
 python3 scripts/build_training_data.py "$TMP/index.html"
 "${SC[@]}" "$TMP/index.html" -d dist/training -p "$JARVIS_APP_PASSWORD" --template-title "JARVIS · Training" >/dev/null
 rm -f "$TMP/index.html"
+# 3) Dining + Travel mini apps: bake ~/.local/share/jarvis/{dining,dining_wishlist,travel}.json (missing -> "Not connected yet").
+for app in dining travel; do
+  python3 scripts/build_mini_page.py "$app" "$TMP/$app.html"
+  mkdir -p "$TMP/$app" && mv "$TMP/$app.html" "$TMP/$app/index.html"
+  title="$(tr '[:lower:]' '[:upper:]' <<< "${app:0:1}")${app:1}"
+  "${SC[@]}" "$TMP/$app/index.html" -d "dist/$app" -p "$JARVIS_APP_PASSWORD" --template-title "JARVIS · $title" >/dev/null
+  rm -rf "$TMP/$app"
+done
 # Dark, no-white-flash lock screens + embed handoff
 BUILD_ID="$BUILD_ID" python3 - <<'PY'
 import os
@@ -49,12 +57,13 @@ addEventListener("load",function(){setTimeout(function(){
  ready=true;
  var k=pending;try{k=k||sessionStorage.getItem("jarvis_key")}catch(e){}go(k)},0)});
 parent.postMessage({type:"jarvis:hello"},location.origin)})();</script>'''
-patch("dist/training/index.html",body_extra=handoff)
+for app in ("training","dining","travel"): patch("dist/%s/index.html"%app,body_extra=handoff)
 PY
-for f in dist/index.html dist/training/index.html; do
+for f in $(find dist -name "*.html" ! -name oura-callback.html); do
   grep -q "staticrypt" "$f" && grep -q "staticryptConfig" "$f" || { echo "ERROR: $f not encrypted" >&2; rm -rf dist; exit 1; }
 done
-# Plaintext leak guards: no app source or Oura fields may appear in the published files
-if grep -lE 'const APPS=|"readiness":|"sleepScore"|"workouts":|total_sleep_duration|__OURA_DATA__' dist/index.html dist/training/index.html; then
+# Plaintext leak guards: no app source, Oura, dining or travel fields may appear in ANY published file
+LEAK='const APPS=|"readiness":|"sleepScore"|"workouts":|total_sleep_duration|__OURA_DATA__|__DATA__|__COMMON_|"reservations":|"ordered_in":|"trips":|"wishlist":|"conf_tail":|mail\.google\.com|function resRow|Places I want to try|Upcoming trips'
+if grep -rlE "$LEAK" dist --include='*.html' --include='*.js' --include='*.json' --include='*.webmanifest'; then
   echo "ERROR: plaintext leaked into dist" >&2; rm -rf dist; exit 1; fi
 echo "Built locked site in dist/ (build $BUILD_ID)"

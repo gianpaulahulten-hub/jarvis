@@ -1,0 +1,54 @@
+<!doctype html><html lang="en" style="background:#0a0d14"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d14"><meta name="color-scheme" content="dark">
+<title>JARVIS · Travel</title>
+<style>html,body{background:#0a0d14;color:#e7ecf5;margin:0}</style>
+<style>/*__COMMON_CSS__*/
+.trip{background:linear-gradient(160deg,#16203a,#111725 60%);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+.trip .tt{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.trip .ti{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.trip .dr{color:var(--mut);font-size:13px;margin-top:2px}
+.cd{background:#0f1a2e;border:1px solid #1f3b4d;color:var(--acc);border-radius:12px;padding:6px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.tl{margin-top:12px;border-left:2px solid #22304d;margin-left:15px;padding-left:0}
+.it{position:relative;display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 0 10px 24px}
+.it .ic{position:absolute;left:-16px;top:7px;width:30px;height:30px;border-radius:10px;background:#18213a;border:1px solid var(--line);display:grid;place-items:center;font-size:15px}
+.it .go{align-self:start}.it .nm{font-size:14px}.it .meta{font-size:12px}
+.conf{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:#c7cfdd;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:2px 7px;display:inline-block;margin-top:5px}
+.past{display:block;padding:11px 0;border-top:1px solid var(--line)}
+.past:first-of-type{border-top:0;padding-top:2px}
+.past summary{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;color:#e7ecf5;font-size:14px}
+.past .ic2{color:var(--mut);font-size:12px}
+</style></head><body>
+<div class="top"><div class="src" id="meta"></div><button class="eye" id="eye" aria-label="Hide details"></button></div>
+<div id="app"></div>
+<script>
+const D=/*__DATA__*/null;
+/*__COMMON_JS__*/
+const ICON={flight:"✈️",hotel:"🏨",rental:"🏡",train:"🚄",bus:"🚌",car:"🚗",event:"🎟️"};
+function range(t){const a=t.start,b=t.end||t.start;if(a===b)return dfmt(a,{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+ const sameY=a.slice(0,4)===b.slice(0,4);return dfmt(a,{month:"short",day:"numeric",...(sameY?{}:{year:"numeric"})})+" – "+dfmt(b,{month:"short",day:"numeric",year:"numeric"})}
+function nights(t){const n=Math.round((dayOf(t.end||t.start)-dayOf(t.start))/864e5);return n>0?n+(n===1?" night":" nights"):"day trip"}
+function itemWhen(i){if(!i.start)return "";if(i.allday||isDate(i.start))return dfmt(i.start)+(i.end&&i.end!==i.start?" → "+dfmt(i.end):"");
+ return dfmt(i.start)+" · "+tm(i.start)+(i.end?" → "+(dfmt(i.end)!==dfmt(i.start)?dfmt(i.end)+" ":"")+tm(i.end):"")+" ET"}
+function item(i){const sub=[itemWhen(i),i.address].filter(Boolean).map(esc).join(" · ");
+ return `<div class="it"><div class="ic">${ICON[i.type]||"•"}</div><div><div class="nm p">${esc(i.title)}</div>${sub?`<div class="meta p">${sub}</div>`:""}${i.note?`<div class="meta" style="color:var(--dim)">${esc(i.note)}</div>`:""}${i.conf_tail?`<span class="conf" title="Confirmation code, last 2 characters">Conf ••••${esc(i.conf_tail)}</span>`:""}</div>${i.link?`<a class="go" href="${esc(i.link)}" target="_blank" rel="noopener">Email</a>`:"<span></span>"}</div>`}
+function sorted(items){return items.slice().sort((a,b)=>(a.start?dayOf(a.start):Infinity)-(b.start?dayOf(b.start):Infinity))}
+function render(){
+ if(!D||!D.travel){$("#meta").innerHTML="<b>Gmail + Calendar</b> · not connected yet";$("#app").innerHTML='<div class="card empty"><b>Not connected yet</b>Once JARVIS scans your Gmail and Calendar, your trips will appear here.</div>';return post()}
+ const d=D.travel,today=new Date(new Date().toLocaleDateString("en-CA",{timeZone:TZ})+"T12:00:00Z");
+ $("#meta").innerHTML=`<b>Gmail + Calendar</b> · updated ${updated(d.updated)}`;
+ const trips=d.trips||[],win=(d.window&&d.window.past_days||365)*864e5;
+ const up=trips.filter(t=>dayOf(t.end||t.start)>=today).sort((a,b)=>dayOf(a.start)-dayOf(b.start));
+ const past=trips.filter(t=>dayOf(t.end||t.start)<today&&today-dayOf(t.end||t.start)<=win).sort((a,b)=>dayOf(b.start)-dayOf(a.start));
+ let h="";
+ h+=`<div class="card" style="padding-bottom:6px"><h2>Upcoming trips <small class="p">${up.length||""}</small></h2>${up.length?"":'<div class="empty-s" style="padding-bottom:10px"><b>No trips booked</b>Flight, hotel, Airbnb, train and rental confirmations in your Gmail show up here.</div>'}</div>`;
+ h+=up.map(t=>{const on=dayOf(t.start)<=today;return `<div class="trip"><div class="tt"><div><div class="ti p">${esc(t.title)}</div><div class="dr p">${range(t)} · ${nights(t)}</div>${t.destination?`<div class="meta p">${esc(t.destination)}</div>`:""}<div class="chips">${t.traveler?`<span class="chip cal">Traveler: ${esc(t.traveler)}</span>`:""}${t.status==="calendar"?'<span class="chip cal">From calendar</span>':""}${t.status==="unconfirmed"?'<span class="chip warn">Unconfirmed</span>':""}</div></div><span class="cd p">${on?"Now":until(t.start)}</span></div>
+  <div class="tl">${sorted(t.items||[]).map(item).join("")}</div>${t.note?`<div class="meta" style="color:var(--dim)">${esc(t.note)}</div>`:""}</div>`}).join("");
+ h+=`<div class="card"><h2>Past trips <small>last 12 months · <span class="p">${past.length}</span></small></h2>${past.length?past.map(t=>{const c={};(t.items||[]).forEach(i=>c[i.type]=(c[i.type]||0)+1);
+  return `<details class="past"><summary><div><div class="nm p">${esc(t.title)}</div><div class="meta p">${range(t)}${t.traveler?" · "+esc(t.traveler):""}</div></div><span class="ic2 p">${Object.entries(c).map(([k,n])=>(ICON[k]||"•")+(n>1?n:"")).join(" ")} ▸</span></summary><div class="tl">${sorted(t.items||[]).map(item).join("")}</div>${t.note?`<div class="meta" style="color:var(--dim)">${esc(t.note)}</div>`:""}</details>`}).join(""):'<div class="empty-s">No trips in the last 12 months.</div>'}</div>`;
+ h+=`<div class="foot">Read-only from your Gmail &amp; Calendar · times in ET · JARVIS never books or changes anything without your OK</div>`;
+ $("#app").innerHTML=h;
+ document.querySelectorAll("details").forEach(x=>x.addEventListener("toggle",post));
+ post()}
+render();
+</script></body></html>

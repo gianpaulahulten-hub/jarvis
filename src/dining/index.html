@@ -1,0 +1,64 @@
+<!doctype html><html lang="en" style="background:#0a0d14"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d14"><meta name="color-scheme" content="dark">
+<title>JARVIS · Dining</title>
+<style>html,body{background:#0a0d14;color:#e7ecf5;margin:0}</style>
+<style>/*__COMMON_CSS__*/
+.oi{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+.oi:first-of-type{border-top:0}.oi .meta{margin:0}
+.top3{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.month{font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 2px}
+.month:first-child{margin-top:0}
+</style></head><body>
+<div class="top"><div class="src" id="meta"></div><button class="eye" id="eye" aria-label="Hide details"></button></div>
+<div id="app"></div>
+<script>
+const D=/*__DATA__*/null;
+/*__COMMON_JS__*/
+const NY="America/New_York";
+function when(r){const t=tm(r.start,r.tz||NY);const loc=r.tz&&r.tz!==NY;return loc?`${t} ${ab(r.tz)} <span style="color:var(--dim)">(${tm(r.start)} ET)</span>`:`${t} ET`}
+function dateBox(iso,tz){return `<div class="date p"><span>${fmt(iso,{month:"short"},tz)}</span><b>${fmt(iso,{day:"numeric"},tz)}</b><span>${fmt(iso,{weekday:"short"},tz)}</span></div>`}
+function chipsFor(r,past){const c=[];
+ if(r.platform)c.push(`<span class="chip">${esc(r.platform)}</span>`);
+ if(r.status==="unconfirmed")c.push('<span class="chip warn">Unconfirmed</span>');
+ else if(r.status==="changed")c.push('<span class="chip">Changed</span>');
+ if(r.status==="calendar")c.push('<span class="chip cal">From calendar</span>');
+ if(past&&r.dined)c.push(`<span class="chip ok" title="${esc((r.evidence||[]).join("; "))}">Dined ✓</span>`);
+ return `<div class="chips">${c.join("")}</div>`}
+function resRow(r,past){const bits=[when(r)];if(r.party)bits.push(r.party+(r.party===1?" guest":" guests"));if(r.seating)bits.push(esc(r.seating));
+ return `<div class="row">${dateBox(r.start,r.tz||NY)}<div><div class="nm p">${esc(r.restaurant)}</div><div class="meta p">${bits.join(" · ")}</div>${r.city?`<div class="meta p">${esc([r.address,r.city].filter(Boolean).join(", "))}</div>`:""}${r.note?`<div class="meta" style="color:var(--dim)">${esc(r.note)}</div>`:""}${chipsFor(r,past)}</div>${r.link?`<a class="go" href="${esc(r.link)}" target="_blank" rel="noopener">Email</a>`:"<span></span>"}</div>`}
+let SHOW_RECENT=8,SHOW_OI=8;
+function render(){
+ if(!D||!D.dining){$("#meta").innerHTML="<b>Gmail + Calendar</b> · not connected yet";$("#app").innerHTML='<div class="card empty"><b>Not connected yet</b>Once JARVIS scans your Gmail and Calendar, your reservations will appear here.</div>';return post()}
+ const d=D.dining,now=Date.now(),res=(d.reservations||[]);
+ $("#meta").innerHTML=`<b>Gmail + Calendar</b> · updated ${updated(d.updated)}`;
+ const up=res.filter(r=>new Date(r.start)>=now-2*3600e3).sort((a,b)=>new Date(a.start)-new Date(b.start));
+ const win=(d.window&&d.window.recent_days||180)*864e5;
+ const past=res.filter(r=>new Date(r.start)<now-2*3600e3&&now-new Date(r.start)<=win).sort((a,b)=>new Date(b.start)-new Date(a.start));
+ let h="";
+ // Upcoming
+ h+=`<div class="card"><h2>Upcoming reservations <small class="p">${up.length||""}</small></h2>${up.length?up.map(r=>resRow(r,false)).join(""):'<div class="empty-s"><b>Nothing booked right now</b>New confirmations from Resy, OpenTable, Tock and others show up here automatically.</div>'}</div>`;
+ // Wishlist
+ const wl=(D.wishlist&&D.wishlist.places)||[];
+ h+=`<div class="card"><h2>Places I want to try <small class="p">${wl.length||""}</small></h2>${wl.length?wl.map(p=>`<div class="row" style="grid-template-columns:38px 1fr"><div class="date" style="width:38px;height:38px;font-size:18px">⭐</div><div><div class="nm p">${esc(p.name)}</div>${p.city||p.note?`<div class="meta p">${esc([p.city,p.note].filter(Boolean).join(" · "))}</div>`:""}</div></div>`).join(""):'<div class="empty-s"><b>Your list is empty</b>Tell JARVIS in chat, like “add &lt;restaurant&gt; to my want-to-try list”, and it will show up here.</div>'}</div>`;
+ // Recent
+ let lastM="",rows="";past.slice(0,SHOW_RECENT).forEach(r=>{const m=fmt(r.start,{month:"long",year:"numeric"},r.tz||NY);if(m!==lastM){rows+=`<div class="month">${m}</div>`;lastM=m}rows+=resRow(r,true)});
+ const dined=past.filter(r=>r.dined).length;
+ h+=`<div class="card"><h2>Where I've eaten lately <small>last ${Math.round(win/864e5/30)} months</small></h2>${past.length?`<div class="meta" style="margin:-4px 0 8px"><span class="p">${past.length}</span> reservations and plans · <span class="p">${dined}</span> confirmed by a receipt or post-meal email</div>`+rows+(past.length>SHOW_RECENT?`<button class="more" id="moreR">Show ${past.length-SHOW_RECENT} more</button>`:""):'<div class="empty-s">No past reservations found.</div>'}</div>`;
+ // Ordered in
+ const oi=(d.ordered_in||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+ if(oi.length){const cnt={};oi.forEach(o=>{const k=o.merchant.replace(/\s*[-(].*$/,"");cnt[k]=(cnt[k]||0)+1});const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  h+=`<div class="card"><h2>Ordered in <small>last ${d.window&&d.window.ordered_in_days||90} days · <span class="p">${oi.length}</span> orders</small></h2><div class="top3">${top.map(([k,n])=>`<span class="chip p">${esc(k)} · ${n}×</span>`).join("")}</div>
+  ${oi.slice(0,SHOW_OI).map(o=>`<div class="oi"><div><div class="p">${esc(o.merchant)}${o.group?' <span class="chip">Group</span>':""}</div><div class="meta p">${dfmt(o.date)} · ${tm(o.date)} ET · ${esc(o.platform)}</div></div>${o.link?`<a class="go" href="${esc(o.link)}" target="_blank" rel="noopener">Receipt</a>`:"<span></span>"}</div>`).join("")}
+  ${oi.length>SHOW_OI?`<button class="more" id="moreO">Show ${oi.length-SHOW_OI} more</button>`:""}</div>`}
+ // Cancelled
+ const cx=(d.cancelled||[]).filter(c=>now-new Date(c.start)<=win).sort((a,b)=>new Date(b.start)-new Date(a.start));
+ if(cx.length)h+=`<div class="card"><details><summary>Cancelled lately (<span class="p">${cx.length}</span>) ▸</summary><div style="margin-top:8px">${cx.map(c=>`<div class="oi"><div><div class="p" style="text-decoration:line-through;color:var(--mut)">${esc(c.restaurant)}</div><div class="meta p">${dfmt(c.start,{weekday:"short",month:"short",day:"numeric"})} · ${tm(c.start,c.tz)} ${ab(c.tz)} · ${esc(c.platform||"")}</div></div>${c.link?`<a class="go" href="${esc(c.link)}" target="_blank" rel="noopener">Email</a>`:"<span></span>"}</div>`).join("")}</div></details></div>`;
+ h+=`<div class="foot">Read-only from your Gmail &amp; Calendar · JARVIS never books, cancels or emails without your OK</div>`;
+ $("#app").innerHTML=h;
+ const mr=$("#moreR");if(mr)mr.onclick=()=>{SHOW_RECENT+=20;render()};
+ const mo=$("#moreO");if(mo)mo.onclick=()=>{SHOW_OI+=20;render()};
+ document.querySelectorAll("details").forEach(x=>x.addEventListener("toggle",post));
+ post()}
+render();
+</script></body></html>
