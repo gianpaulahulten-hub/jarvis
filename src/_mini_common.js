@@ -17,7 +17,8 @@ const ab=tz=>TZAB[tz]||tz||"";
 const ago=iso=>{const d=Math.round((Date.now()-new Date(iso))/864e5);return d<=0?"today":d===1?"yesterday":d<30?d+" days ago":d<60?"1 month ago":Math.round(d/30)+" months ago"};
 const until=s=>{const d=Math.ceil((dayOf(s)-Date.now())/864e5);return d<=0?"today":d===1?"tomorrow":"in "+d+" days"};
 function updated(iso){return iso?fmt(iso,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" ET":"unknown"}
-function post(){if(embedded)parent.postMessage({type:"jarvis:height",h:document.documentElement.scrollHeight},location.origin)}
+/* Content height from the body box (not scrollHeight, which never shrinks below the iframe height), so rotation/resizes can shrink it */
+function post(){if(embedded){const cs=getComputedStyle(document.body),h=document.body.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom);parent.postMessage({type:"jarvis:height",h:Math.ceil(h)},location.origin)}}
 if(embedded){new ResizeObserver(post).observe(document.body);
  ["touchstart","touchmove","touchend"].forEach(t=>addEventListener(t,e=>{const p=e.touches[0]||e.changedTouches[0];parent.postMessage({type:"jarvis:touch",phase:t,y:p?p.screenY:0},location.origin)},{passive:true}));
  parent.postMessage({type:"jarvis:hello"},location.origin)}
