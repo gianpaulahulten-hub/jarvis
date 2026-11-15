@@ -20,7 +20,7 @@ SC=(npx -y staticrypt@3 --short --remember 30 --config .staticrypt.json
 python3 scripts/build_training_data.py "$TMP/index.html"
 "${SC[@]}" "$TMP/index.html" -d dist/training -p "$JARVIS_APP_PASSWORD" --template-title "JARVIS · Training" >/dev/null
 rm -f "$TMP/index.html"
-# 3) Dining + Travel mini apps: bake ~/.local/share/jarvis/{dining,dining_wishlist,travel}.json (missing -> "Not connected yet").
+# 3) Dining + Travel mini apps: bake ~/.local/share/jarvis/{dining,dining_wishlist,travel,travel_manual}.json (missing -> "Not connected yet").
 for app in dining travel; do
   python3 scripts/build_mini_page.py "$app" "$TMP/$app.html"
   mkdir -p "$TMP/$app" && mv "$TMP/$app.html" "$TMP/$app/index.html"

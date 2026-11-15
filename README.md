@@ -52,8 +52,9 @@ Exit codes: 0 OK · 1 build/deploy/verify failed · 2 deployed but the Oura fetc
 - Templates: `src/dining/index.html`, `src/travel/index.html`, sharing `src/_mini_common.css` / `src/_mini_common.js` (inlined at build). No data in git.
 - Same lock, salt and embed handoff as Training (`jarvis:hello` → `jarvis:key`, `jarvis:privacy`, `jarvis:height`, `jarvis:touch`). Both are in `PRIVACY_AWARE`: with the eye on they blur every name, date, count and address, hide confirmation codes entirely and disable email links.
 - `build.sh` → `scripts/build_mini_page.py dining|travel` validates and bakes these private files (outside the repo, mode 600) into a temp page, then StatiCrypt encrypts it:
-  - `~/.local/share/jarvis/dining.json`, `~/.local/share/jarvis/dining_wishlist.json`, `~/.local/share/jarvis/travel.json`
+  - `~/.local/share/jarvis/dining.json`, `~/.local/share/jarvis/dining_wishlist.json`, `~/.local/share/jarvis/travel.json`, `~/.local/share/jarvis/travel_manual.json`
   - Missing file → page shows "Not connected yet". Invalid file (bad dates, missing fields, full confirmation codes) → build fails, nothing is deployed.
+  - `travel_manual.json` holds trips GianPaula adds herself (a screenshot, a verbal "add this"). The scheduled rescan may rewrite `travel.json`; it must never read, overwrite, or delete `travel_manual.json`. The build merges the two and dedupes (see refresh procedure).
 - The pages split upcoming vs past themselves at view time, so they stay correct between scans.
 
 ## Dining and Travel refresh
@@ -83,6 +84,7 @@ Calendars: `primary` and the calendar named "Family" (id from `list_calendars`).
 - `dined:true` only with post-meal proof: a Resy/OpenTable "wants your feedback"/"thanks for dining" email or a receipt from that restaurant on that date; put the proof in `evidence`.
 - Times: the restaurant's local time with its UTC offset, plus `tz` (IANA). Travel item times: ISO with offset as the calendar gives them (shown in ET); date-only items use `YYYY-MM-DD` + `allday:true`.
 - Group travel items into trips by destination and contiguous dates. A booking made for someone else (e.g. a parent’s flights) → `traveler:"<who>"`. If the traveler is unclear, leave it out and list it under `excluded`.
+- Owner-provided trips live only in `~/.local/share/jarvis/travel_manual.json` (see below). When a later scan finds the same flight (same flight number and date) already in that file, keep a single copy: keep the Work tag and other manual fields (seat, gate, aircraft, purpose, notes); take the scan’s `conf_tail`, email `link`, and times when present; union `source` with `"manual"`. If a return flight or hotel for the same trip (same destination and overlapping dates, or the same flight) shows up, add it to that trip and clear `return_unknown`. Never write the same trip twice, and never copy manual trips into `travel.json` as a substitute for the merge — `travel.json` is scan-only.
 - Confirmation codes: store **only** `conf_tail` (last 2 characters). Never store full codes, card numbers, addresses of home, or passenger IDs.
 - Links: `https://mail.google.com/mail/u/0/#all/<threadId>` of the newest relevant email.
 - Windows: dining past = 180 days, ordered in = 90 days, travel past = 365 days.
@@ -107,15 +109,17 @@ Calendars: `primary` and the calendar named "Family" (id from `list_calendars`).
 ```json
 {"schema":1,"updated":"<ISO now>","window":{"past_days":365},
  "trips":[{"id":"slug","title":"…","destination":"…","start":"YYYY-MM-DD","end":"YYYY-MM-DD","traveler":"(only if not GianPaula)",
-   "status":"booked|calendar|unconfirmed","note":"…",
+   "status":"booked|calendar|unconfirmed","purpose":"work","return_unknown":true,"note":"…",
    "items":[{"type":"flight|hotel|rental|train|bus|car|event","title":"United 123 EWR → SFO","start":"<ISO or date>","end":"…","allday":true,
      "frm":"EWR","to":"SFO","number":"UA 123","provider":"United","address":"…","conf_tail":"XY","link":"…","source":["gmail","calendar"]}]}],
  "excluded":["what was skipped and why"]}
 ```
+`~/.local/share/jarvis/travel_manual.json` (owner-maintained; only change it when GianPaula asks in chat). Same `trips` shape as `travel.json`. Optional trip fields: `purpose` (`"work"` shows a Work tag), `return_unknown` (true when no return is booked — do not invent one). Optional flight fields from a ticket or app screenshot: `seat`, `cabin`, `dep_gate`, `arr_terminal`, `arr_gate`, `aircraft`. `source` should include `"manual"`. Write atomically, mode 600. This file is private and must stay outside the repo.
+
 Omit unknown fields (never `null` placeholders, never guesses).
 
 ### 5. Build, deploy, verify
 ```
 cd /workspace/jarvis && scripts/deploy.sh
 ```
-(needs `JARVIS_APP_PASSWORD` and `OURA_CLIENT_SECRET` in env; never print them). It pulls newest `main`, rebuilds and encrypts every page, pushes only `dist/` to `gh-pages`, and `scripts/verify_live.sh` confirms all four pages show only the lock screen. If nothing changed in the JSON since the last run, skip the deploy.
+(needs `JARVIS_APP_PASSWORD` and `OURA_CLIENT_SECRET` in env; never print them). It pulls newest `main`, rebuilds and encrypts every page (Travel is `travel.json` merged with `travel_manual.json`), pushes only `dist/` to `gh-pages`, and `scripts/verify_live.sh <build-id>` confirms all four pages show only the lock screen. `scripts/verify_live.sh` with no argument checks the current live pages are locked (no wait for a specific build). If nothing changed in the JSON since the last run, skip the deploy. A hand-added trip in `travel_manual.json` is a change — deploy it.
